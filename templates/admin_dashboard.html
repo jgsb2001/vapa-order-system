@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - VAPA Order System{% endblock %}
+
+{% block content %}
+<h2>📊 Department Overview</h2>
+
+<div class="dashboard-cards">
+    <div class="card card-budget">
+        <h3>Total Budget</h3>
+        <p class="card-value">${{ "{:,.2f}".format(total_budget) }}</p>
+    </div>
+    
+    <div class="card card-allocated">
+        <h3>Total Allocated</h3>
+        <p class="card-value">${{ "{:,.2f}".format(total_allocated) }}</p>
+    </div>
+    
+    <div class="card {% if remaining >= 0 %}card-remaining{% else %}card-over{% endif %}">
+        <h3>Remaining</h3>
+        <p class="card-value">${{ "{:,.2f}".format(remaining) }}</p>
+    </div>
+</div>
+
+<div class="section">
+    <h3>📋 Category Breakdown</h3>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Category</th>
+                <th class="text-right">Amount</th>
+                <th class="text-right">% of Budget</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for category, amount in category_totals.items() %}
+            <tr>
+                <td><strong>{{ category.replace('&', ' & ') }}</strong></td>
+                <td class="text-right">${{ "{:,.2f}".format(amount) }}</td>
+                <td class="text-right">{{ "{:.1f}".format((amount / total_budget * 100) if total_budget > 0 else 0) }}%</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td><strong>TOTAL</strong></td>
+                <td class="text-right"><strong>${{ "{:,.2f}".format(total_allocated) }}</strong></td>
+                <td class="text-right"><strong>{{ "{:.1f}".format((total_allocated / total_budget * 100) if total_budget > 0 else 0) }}%</strong></td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+<div class="section">
+    <h3>👥 Teacher Spending Summary</h3>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Teacher</th>
+                <th class="text-right">Books & Supplies</th>
+                <th class="text-right">Consultants</th>
+                <th class="text-right">Repairs</th>
+                <th class="text-right">Software</th>
+                <th class="text-right">Conferences</th>
+                <th class="text-right">Field Trips</th>
+                <th class="text-right">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for teacher_name, data in teacher_totals.items() %}
+            <tr>
+                <td><strong>{{ teacher_name }}</strong></td>
+                <td class="text-right">${{ "{:,.2f}".format(data.categories['Books&Supplies']) }}</td>
+                <td class="text-right">${{ "{:,.2f}".format(data.categories['Consultants']) }}</td>
+                <td class="text-right">${{ "{:,.2f}".format(data.categories['Repairs']) }}</td>
+                <td class="text-right">${{ "{:,.2f}".format(data.categories['SoftwareLicensing']) }}</td>
+                <td class="text-right">${{ "{:,.2f}".format(data.categories['ConferenceTraining']) }}</td>
+                <td class="text-right">${{ "{:,.2f}".format(data.categories['FieldTrips']) }}</td>
+                <td class="text-right"><strong>${{ "{:,.2f}".format(data.total) }}</strong></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="section">
+    <h3>📦 Recent Orders</h3>
+    <div class="button-group">
+        <a href="{{ url_for('admin_teachers') }}" class="btn btn-secondary">Manage Teachers</a>
+        <a href="{{ url_for('export_excel') }}" class="btn btn-success">Export to Excel</a>
+    </div>
+</div>
+{% endblock %}

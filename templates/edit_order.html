@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Order - VAPA Order System{% endblock %}
+
+{% block content %}
+<h2>✏️ Edit Order</h2>
+
+<form method="POST" action="{{ url_for('edit_order', order_id=order.id) }}" class="form-container" id="orderForm">
+    <div class="form-group">
+        <label for="vendor">Vendor Name *</label>
+        <input type="text" id="vendor" name="vendor" class="form-control" value="{{ order.vendor }}" required>
+    </div>
+    
+    <h3>Order Items</h3>
+    <div class="order-items-container">
+        <table class="order-items-table" id="itemsTable">
+            <thead>
+                <tr>
+                    <th style="width: 120px;">Catalog #</th>
+                    <th style="width: 300px;">Description</th>
+                    <th style="width: 80px;">Quantity</th>
+                    <th style="width: 100px;">Unit Cost</th>
+                    <th style="width: 100px;">Total</th>
+                    <th style="width: 150px;">Category</th>
+                    <th style="width: 60px;">Action</th>
+                </tr>
+            </thead>
+            <tbody id="itemsBody">
+                {% for item in order.items %}
+                <tr class="item-row" data-item-id="{{ item.id }}">
+                    <input type="hidden" name="item_id" value="{{ item.id }}">
+                    <td><input type="text" name="catalog_{{ loop.index0 }}" class="form-control" value="{{ item.catalog_number or '' }}"></td>
+                    <td><input type="text" name="description_{{ loop.index0 }}" class="form-control" value="{{ item.description or '' }}"></td>
+                    <td><input type="number" name="quantity_{{ loop.index0 }}" class="form-control item-quantity" value="{{ item.quantity or '' }}" min="0"></td>
+                    <td><input type="number" name="unit_cost_{{ loop.index0 }}" class="form-control item-unit-cost" value="{{ item.unit_cost or '' }}" step="0.01" min="0"></td>
+                    <td class="item-total">${{ "{:.2f}".format(item.total_cost) }}</td>
+                    <td>
+                        <select name="category_{{ loop.index0 }}" class="form-control">
+                            <option value="">Select...</option>
+                            <option value="Books&Supplies" {% if item.category == 'Books&Supplies' %}selected{% endif %}>Books & Supplies</option>
+                            <option value="Consultants" {% if item.category == 'Consultants' %}selected{% endif %}>Consultants</option>
+                            <option value="Repairs" {% if item.category == 'Repairs' %}selected{% endif %}>Repairs</option>
+                            <option value="SoftwareLicensing" {% if item.category == 'SoftwareLicensing' %}selected{% endif %}>Software Licensing</option>
+                            <option value="ConferenceTraining" {% if item.category == 'ConferenceTraining' %}selected{% endif %}>Conference/Training</option>
+                            <option value="FieldTrips" {% if item.category == 'FieldTrips' %}selected{% endif %}>Field Trips</option>
+                        </select>
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="deleteItem({{ order.id }}, {{ item.id }}, this)">🗑️</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="button-group">
+        <button type="button" class="btn btn-secondary" onclick="addItemRow()">+ Add Item</button>
+    </div>
+    
+    <div class="order-summary">
+        <h3>Order Summary</h3>
+        <table class="summary-table">
+            <tr>
+                <td>Subtotal:</td>
+                <td class="text-right" id="subtotal">$0.00</td>
+            </tr>
+            <tr>
+                <td><strong>Total:</strong></td>
+                <td class="text-right"><strong id="grandTotal">$0.00</strong></td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="button-group">
+        <button type="submit" class="btn btn-primary">Save Order</button>
+        <a href="{{ url_for('view_order', order_id=order.id) }}" class="btn btn-secondary">Cancel</a>
+        <form method="POST" action="{{ url_for('delete_order', order_id=order.id) }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this entire order?');">
+            <button type="submit" class="btn btn-danger">Delete Order</button>
+        </form>
+    </div>
+</form>
+
+<div class="back-link">
+    <a href="{{ url_for('dashboard') }}">&larr; Back to Dashboard</a>
+</div>
+
+<script>
+let itemCounter = {{ order.items|length }};
+
+function addItemRow() {
+    const tbody = document.getElementById('itemsBody');
+    const row = document.createElement('tr');
+    row.className = 'item-row';
+    
+    row.innerHTML = `
+        <input type="hidden" name="item_id" value="">
+        <td><input type="text" name="catalog_${itemCounter}" class="form-control"></td>
+        <td><input type="text" name="description_${itemCounter}" class="form-control"></td>
+        <td><input type="number" name="quantity_${itemCounter}" class="form-control item-quantity" min="0"></td>
+        <td><input type="number" name="unit_cost_${itemCounter}" class="form-control item-unit-cost" step="0.01" min="0"></td>
+        <td class="item-total">$0.00</td>
+        <td>
+            <select name="category_${itemCounter}" class="form-control">
+                <option value="">Select...</option>
+                <option value="Books&Supplies">Books & Supplies</option>
+                <option value="Consultants">Consultants</option>
+                <option value="Repairs">Repairs</option>
+                <option value="SoftwareLicensing">Software Licensing</option>
+                <option value="ConferenceTraining">Conference/Training</option>
+                <option value="FieldTrips">Field Trips</option>
+            </select>
+        </td>
+        <td>
+            <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">🗑️</button>
+        </td>
+    `;
+    
+    tbody.appendChild(row);
+    itemCounter++;
+    
+    // Add event listeners to new inputs
+    attachCalculationListeners(row);
+    updateTotals();
+}
+
+function removeRow(button) {
+    if (confirm('Remove this item?')) {
+        button.closest('tr').remove();
+        updateTotals();
+    }
+}
+
+function deleteItem(orderId, itemId, button) {
+    if (!confirm('Delete this item?')) return;
+    
+    fetch(`/api/order/${orderId}/item/${itemId}/delete`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            button.closest('tr').remove();
+            updateTotals();
+        } else {
+            alert('Error deleting item: ' + data.message);
+        }
+    })
+    .catch(error => {
+        alert('Error deleting item');
+        console.error(error);
+    });
+}
+
+function updateTotals() {
+    let subtotal = 0;
+    
+    document.querySelectorAll('.item-row').forEach(row => {
+        const quantity = parseFloat(row.querySelector('.item-quantity').value) || 0;
+        const unitCost = parseFloat(row.querySelector('.item-unit-cost').value) || 0;
+        const total = quantity * unitCost;
+        
+        row.querySelector('.item-total').textContent = '$' + total.toFixed(2);
+        subtotal += total;
+    });
+    
+    document.getElementById('subtotal').textContent = '$' + subtotal.toFixed(2);
+    document.getElementById('grandTotal').textContent = '$' + subtotal.toFixed(2);
+}
+
+function attachCalculationListeners(row) {
+    const quantity = row.querySelector('.item-quantity');
+    const unitCost = row.querySelector('.item-unit-cost');
+    
+    if (quantity) quantity.addEventListener('input', updateTotals);
+    if (unitCost) unitCost.addEventListener('input', updateTotals);
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.item-row').forEach(attachCalculationListeners);
+    updateTotals();
+});
+</script>
+{% endblock %}
