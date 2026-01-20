@@ -53,6 +53,28 @@ class OrderItem(db.Model):
     def total_cost(self):
         return self.quantity * self.unit_cost if self.quantity and self.unit_cost else 0
 
+class Settings(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    key = db.Column(db.String(100), unique=True, nullable=False)
+    value = db.Column(db.String(500), nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_by = db.Column(db.String(100))
+
+class BudgetHistory(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    fiscal_year = db.Column(db.String(20), nullable=False)
+    total_budget = db.Column(db.Float, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_by = db.Column(db.String(100))
+    notes = db.Column(db.String(500))
+
+# Helper function to get current budget
+def get_current_budget():
+    setting = Settings.query.filter_by(key='total_budget').first()
+    if setting:
+        return float(setting.value)
+    return 50128.0  # Default fallback
+
 # Login required decorator
 def login_required(f):
     @wraps(f)
@@ -147,7 +169,7 @@ def dashboard():
                     teacher_totals[teacher_name]['categories'][item.category] += item.total_cost
                     teacher_totals[teacher_name]['total'] += item.total_cost
         
-        total_budget = 50128  # From your original file
+        total_budget = get_current_budget()
         total_allocated = sum(category_totals.values())
         remaining = total_budget - total_allocated
         
@@ -180,6 +202,63 @@ def dashboard():
         return render_template('teacher_dashboard.html',
                              orders=orders,
                              category_totals=category_totals)
+
+@app.route('/admin/settings', methods=['GET', 'POST'])
+@admin_required
+def admin_settings():
+    if request.method == 'POST':
+        new_budget = request.form.get('total_budget')
+        fiscal_year = request.form.get('fiscal_year')
+        notes = request.form.get('notes')
+        
+        try:
+            new_budget = float(new_budget)
+            
+            # Update or create budget setting
+            setting = Settings.query.filter_by(key='total_budget').first()
+            if setting:
+                old_budget = float(setting.value)
+                setting.value = str(new_budget)
+                setting.updated_by = session['full_name']
+                setting.updated_at = datetime.utcnow()
+            else:
+                setting = Settings(
+                    key='total_budget',
+                    value=str(new_budget),
+                    updated_by=session['full_name']
+                )
+                db.session.add(setting)
+            
+            # Add to budget history
+            history = BudgetHistory(
+                fiscal_year=fiscal_year,
+                total_budget=new_budget,
+                created_by=session['full_name'],
+                notes=notes
+            )
+            db.session.add(history)
+            
+            db.session.commit()
+            flash(f'Budget updated to ${new_budget:,.2f} for {fiscal_year}!', 'success')
+            return redirect(url_for('admin_settings'))
+            
+        except ValueError:
+            flash('Invalid budget amount. Please enter a valid number.', 'danger')
+    
+    # Get current budget
+    current_budget = get_current_budget()
+    
+    # Get budget history
+    history = BudgetHistory.query.order_by(BudgetHistory.created_at.desc()).limit(10).all()
+    
+    # Get current fiscal year
+    now = datetime.now()
+    current_fiscal_year = f"{now.year}-{now.year + 1}"
+    
+    return render_template('admin_settings.html',
+                         current_budget=current_budget,
+                         history=history,
+                         current_fiscal_year=current_fiscal_year)
 
 @app.route('/admin/teachers')
 @admin_required
@@ -485,11 +564,23 @@ def init_db():
                 is_admin=True,
                 is_active=True
             )
-            admin.set_password('admin123')  # Change this!
+            admin.set_password('admin123')
             db.session.add(admin)
             db.session.commit()
             print('Default admin created: username=admin, password=admin123')
             print('IMPORTANT: Change the admin password after first login!')
+        
+        # Create default budget setting if not exists
+        budget_setting = Settings.query.filter_by(key='total_budget').first()
+        if not budget_setting:
+            budget_setting = Settings(
+                key='total_budget',
+                value='50128',
+                updated_by='System'
+            )
+            db.session.add(budget_setting)
+            db.session.commit()
+            print('Default budget created: $50,128')
 
 if __name__ == '__main__':
     init_db()
