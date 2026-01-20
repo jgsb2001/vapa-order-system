@@ -294,6 +294,87 @@ def admin_settings():
                          history=history,
                          current_fiscal_year=current_fiscal_year)
 
+# Add this route to app.py (after the admin_settings route, around line 215)
+
+@app.route('/admin/orders')
+@admin_required
+def admin_all_orders():
+    # Get filter parameters
+    teacher_filter = request.args.get('teacher', '')
+    category_filter = request.args.get('category', '')
+    sort_by = request.args.get('sort', 'date_desc')
+    
+    # Get all orders
+    query = Order.query
+    
+    # Apply teacher filter
+    if teacher_filter:
+        query = query.filter(Order.user_id == int(teacher_filter))
+    
+    # Get all orders
+    all_orders = query.all()
+    
+    # Apply category filter and calculate totals
+    filtered_orders = []
+    for order in all_orders:
+        order_total = sum(item.total_cost for item in order.items)
+        order_categories = {}
+        
+        for item in order.items:
+            if item.category:
+                order_categories[item.category] = order_categories.get(item.category, 0) + item.total_cost
+        
+        # If category filter is set, only include orders with that category
+        if category_filter:
+            if category_filter in order_categories:
+                filtered_orders.append({
+                    'order': order,
+                    'total': order_total,
+                    'categories': order_categories,
+                    'item_count': len(order.items)
+                })
+        else:
+            filtered_orders.append({
+                'order': order,
+                'total': order_total,
+                'categories': order_categories,
+                'item_count': len(order.items)
+            })
+    
+    # Sort orders
+    if sort_by == 'date_desc':
+        filtered_orders.sort(key=lambda x: x['order'].created_at, reverse=True)
+    elif sort_by == 'date_asc':
+        filtered_orders.sort(key=lambda x: x['order'].created_at)
+    elif sort_by == 'teacher':
+        filtered_orders.sort(key=lambda x: x['order'].teacher.full_name)
+    elif sort_by == 'vendor':
+        filtered_orders.sort(key=lambda x: x['order'].vendor)
+    elif sort_by == 'total_desc':
+        filtered_orders.sort(key=lambda x: x['total'], reverse=True)
+    elif sort_by == 'total_asc':
+        filtered_orders.sort(key=lambda x: x['total'])
+    
+    # Get all teachers for filter dropdown
+    teachers = User.query.filter_by(is_admin=False).all()
+    
+    # Calculate summary statistics
+    total_orders = len(filtered_orders)
+    total_amount = sum(o['total'] for o in filtered_orders)
+    
+    categories = ['Books&Supplies', 'Consultants', 'Repairs', 'SoftwareLicensing', 'ConferenceTraining', 'FieldTrips']
+    
+    return render_template('admin_all_orders.html',
+                         orders=filtered_orders,
+                         teachers=teachers,
+                         categories=categories,
+                         teacher_filter=teacher_filter,
+                         category_filter=category_filter,
+                         sort_by=sort_by,
+                         total_orders=total_orders,
+                         total_amount=total_amount)
+
+
 @app.route('/admin/teachers')
 @admin_required
 def admin_teachers():
