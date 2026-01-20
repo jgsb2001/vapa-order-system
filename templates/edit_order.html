@@ -3,7 +3,7 @@
 {% block title %}Edit Order - VAPA Order System{% endblock %}
 
 {% block content %}
-<h2>✏️ Edit Order</h2>
+<h2>âœï¸ Edit Order</h2>
 
 <form method="POST" action="{{ url_for('edit_order', order_id=order.id) }}" class="form-container" id="orderForm">
     <div class="form-group">
@@ -16,13 +16,13 @@
         <table class="order-items-table" id="itemsTable">
             <thead>
                 <tr>
-                    <th style="width: 120px;">Catalog #</th>
-                    <th style="width: 300px;">Description</th>
-                    <th style="width: 80px;">Quantity</th>
-                    <th style="width: 100px;">Unit Cost</th>
-                    <th style="width: 100px;">Total</th>
-                    <th style="width: 150px;">Category</th>
-                    <th style="width: 60px;">Action</th>
+                    <th style="width: 10%;">Catalog #</th>
+                    <th style="width: 25%;">Description</th>
+                    <th style="width: 8%;">Quantity</th>
+                    <th style="width: 12%;">Unit Cost</th>
+                    <th style="width: 10%;">Total</th>
+                    <th style="width: 22%;">Category</th>
+                    <th style="width: 8%;">Action</th>
                 </tr>
             </thead>
             <tbody id="itemsBody">
@@ -46,7 +46,7 @@
                         </select>
                     </td>
                     <td>
-                        <button type="button" class="btn btn-danger btn-sm" onclick="deleteItem({{ order.id }}, {{ item.id }}, this)">🗑️</button>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="deleteItem({{ order.id }}, {{ item.id }}, this)">ðŸ—‘ï¸</button>
                     </td>
                 </tr>
                 {% endfor %}
@@ -85,6 +85,123 @@
     <a href="{{ url_for('dashboard') }}">&larr; Back to Dashboard</a>
 </div>
 
+<style>
+/* Responsive order items table */
+.order-items-container {
+    width: 100%;
+    overflow-x: auto;
+    margin: 1.5rem 0;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.order-items-table {
+    width: 100%;
+    min-width: 1000px;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.order-items-table thead {
+    background-color: #4472C4;
+    color: white;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.order-items-table th {
+    padding: 1rem 0.75rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border: 1px solid #3461af;
+}
+
+.order-items-table td {
+    padding: 0.5rem 0.5rem;
+    border: 1px solid #e9ecef;
+    vertical-align: middle;
+}
+
+.order-items-table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* Make all inputs fill their cells */
+.order-items-table input[type="text"],
+.order-items-table input[type="number"],
+.order-items-table select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+}
+
+.order-items-table input[type="text"]:focus,
+.order-items-table input[type="number"]:focus,
+.order-items-table select:focus {
+    outline: none;
+    border-color: #4472C4;
+    box-shadow: 0 0 0 2px rgba(68, 114, 196, 0.1);
+}
+
+/* Make select dropdowns more visible */
+.order-items-table select {
+    background-color: white;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
+    padding-right: 2rem;
+}
+
+/* Item total column styling */
+.item-total {
+    font-weight: 600;
+    color: #28a745;
+    text-align: right;
+    padding-right: 1rem !important;
+}
+
+/* Delete button in table */
+.order-items-table .btn-sm {
+    padding: 0.4rem 0.6rem;
+    font-size: 1rem;
+    width: 100%;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1400px) {
+    .order-items-container {
+        overflow-x: scroll;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .order-items-table {
+        min-width: 900px;
+    }
+}
+
+@media (max-width: 768px) {
+    .order-items-table th,
+    .order-items-table td {
+        padding: 0.5rem 0.3rem;
+        font-size: 0.85rem;
+    }
+    
+    .order-items-table input,
+    .order-items-table select {
+        font-size: 0.85rem;
+        padding: 0.4rem;
+    }
+}
+</style>
+
 <script>
 let itemCounter = {{ order.items|length }};
 
@@ -112,7 +229,7 @@ function addItemRow() {
             </select>
         </td>
         <td>
-            <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">🗑️</button>
+            <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">ðŸ—‘ï¸</button>
         </td>
     `;
     
