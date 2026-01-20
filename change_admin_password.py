@@ -38,7 +38,7 @@ with app.app_context():
 1. **Logout**
 2. **Login with:**
    - Username: `admin`
-   - Password: `[your new password]`
+   - Password: `giby2004`
 
 **Step 5: Clean Up (Optional)**
 
