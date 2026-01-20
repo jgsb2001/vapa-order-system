@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - VAPA Order System{% endblock %}
+
+{% block content %}
+<h2>âš™ï¸ System Settings</h2>
+
+<div class="section">
+    <h3>ðŸ’° Budget Management</h3>
+    
+    <div class="budget-display">
+        <p><strong>Current Budget:</strong> <span class="budget-amount">${{ "{:,.2f}".format(current_budget) }}</span></p>
+    </div>
+    
+    <form method="POST" action="{{ url_for('admin_settings') }}" class="form-container">
+        <div class="form-group">
+            <label for="fiscal_year">Fiscal Year *</label>
+            <input type="text" id="fiscal_year" name="fiscal_year" class="form-control" 
+                   value="{{ current_fiscal_year }}" required>
+            <small>Example: 2025-2026</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="total_budget">Total Budget Amount *</label>
+            <input type="number" id="total_budget" name="total_budget" class="form-control" 
+                   step="0.01" min="0" value="{{ current_budget }}" required>
+            <small>Enter the total budget for the department</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="notes">Notes (Optional)</label>
+            <textarea id="notes" name="notes" class="form-control" rows="3" 
+                      placeholder="Optional notes about this budget change..."></textarea>
+            <small>Example: "Board approved budget increase for new instruments"</small>
+        </div>
+        
+        <div class="button-group">
+            <button type="submit" class="btn btn-primary">ðŸ’¾ Update Budget</button>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+{% if history %}
+<div class="section">
+    <h3>ðŸ“œ Budget History</h3>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Fiscal Year</th>
+                <th class="text-right">Budget Amount</th>
+                <th>Updated By</th>
+                <th>Date</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for record in history %}
+            <tr>
+                <td><strong>{{ record.fiscal_year }}</strong></td>
+                <td class="text-right">${{ "{:,.2f}".format(record.total_budget) }}</td>
+                <td>{{ record.created_by }}</td>
+                <td>{{ record.created_at.strftime('%B %d, %Y') }}</td>
+                <td>{{ record.notes or '-' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div class="section">
+    <h3>â„¹ï¸ About Budget Management</h3>
+    <div class="info-box">
+        <p><strong>How it works:</strong></p>
+        <ul>
+            <li>The budget is tracked by fiscal year (July 1 - June 30)</li>
+            <li>All changes are logged in the history below</li>
+            <li>The dashboard automatically updates when you change the budget</li>
+            <li>Budget history is preserved for reporting purposes</li>
+        </ul>
+        
+        <p><strong>When to update:</strong></p>
+        <ul>
+            <li>At the start of each fiscal year (typically July)</li>
+            <li>When the board approves budget changes</li>
+            <li>If additional funding is allocated mid-year</li>
+        </ul>
+    </div>
+</div>
+
+<div class="back-link">
+    <a href="{{ url_for('dashboard') }}">&larr; Back to Dashboard</a>
+</div>
+
+<style>
+.budget-display {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    border-left: 4px solid #4472C4;
+}
+
+.budget-amount {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #4472C4;
+}
+
+.info-box {
+    background: #e7f3ff;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border-left: 4px solid #4472C4;
+}
+
+.info-box ul {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+}
+
+.info-box li {
+    margin: 0.5rem 0;
+}
+</style>
+{% endblock %}
