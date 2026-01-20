@@ -10,7 +10,28 @@ from openpyxl.styles import Font, PatternFill, Alignment
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-change-this-in-production'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///vapa_orders.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///vapa_orders.db')
+```
+
+5. **Commit:** "Switch to PostgreSQL database"
+
+### Step 5: Add PostgreSQL Driver
+
+1. **Go to GitHub** → **`requirements.txt`**
+2. **Click Edit**
+3. **Add this line at the bottom:**
+```
+   psycopg2-binary==2.9.9
+```
+
+4. **Your requirements.txt should now look like:**
+```
+   Flask==3.0.0
+   Flask-SQLAlchemy==3.1.1
+   Werkzeug==3.0.1
+   openpyxl==3.1.2
+   gunicorn==21.2.0
+   psycopg2-binary==2.9.9
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
