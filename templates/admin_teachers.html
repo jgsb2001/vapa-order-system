@@ -34,7 +34,13 @@
             </td>
             <td>{{ teacher.orders|length }}</td>
             <td class="text-right">
-                ${{ "{:,.2f}".format(teacher.orders|sum(attribute='items')|sum(attribute='total_cost') or 0) }}
+                ${%- set total = 0 -%}
+{%- for order in teacher.orders -%}
+  {%- for item in order.items -%}
+    {%- set total = total + item.total_cost -%}
+  {%- endfor -%}
+{%- endfor -%}
+{{ "{:,.2f}".format(total) }}
             </td>
             <td class="text-center">
                 <div class="button-group">
