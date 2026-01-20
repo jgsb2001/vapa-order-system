@@ -17,6 +17,7 @@
                 <span class="nav-user">👤 {{ session.full_name }}</span>
                 <a href="{{ url_for('dashboard') }}" class="nav-link">Dashboard</a>
                 {% if session.is_admin %}
+                <a href="{{ url_for('admin_all_orders') }}" class="nav-link">All Orders</a>
                 <a href="{{ url_for('admin_teachers') }}" class="nav-link">Manage Teachers</a>
                 <a href="{{ url_for('admin_settings') }}" class="nav-link">Settings</a>
                 <a href="{{ url_for('export_excel') }}" class="nav-link">Export to Excel</a>
