@@ -654,16 +654,25 @@ def export_excel():
 @login_required
 def delete_item(order_id, item_id):
     item = OrderItem.query.get_or_404(item_id)
+    order = item.order
     
     # Check permissions
     user = User.query.get(session['user_id'])
-    if not user.is_admin and item.order.user_id != user.id:
+    if not user.is_admin and order.user_id != user.id:
         return jsonify({'success': False, 'message': 'Access denied'}), 403
     
+    # Delete the item
     db.session.delete(item)
     db.session.commit()
     
-    return jsonify({'success': True})
+    # Check if order now has no items - if so, delete the entire order
+    remaining_items = OrderItem.query.filter_by(order_id=order.id).count()
+    if remaining_items == 0:
+        db.session.delete(order)
+        db.session.commit()
+        return jsonify({'success': True, 'order_deleted': True})
+    
+    return jsonify({'success': True, 'order_deleted': False})
 
 # Initialize database
 def init_db():
