@@ -281,6 +281,12 @@ function deleteItem(orderId, itemId, button) {
         if (data.success) {
             button.closest('tr').remove();
             updateTotals();
+            
+            // If the entire order was deleted, redirect to dashboard
+            if (data.order_deleted) {
+                alert('Last item deleted. Order has been removed.');
+                window.location.href = '/dashboard';
+            }
         } else {
             alert('Error deleting item: ' + data.message);
         }
@@ -290,7 +296,6 @@ function deleteItem(orderId, itemId, button) {
         console.error(error);
     });
 }
-
 function updateTotals() {
     let subtotal = 0;
     
