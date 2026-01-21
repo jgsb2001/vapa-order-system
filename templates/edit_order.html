@@ -46,7 +46,7 @@
                         </select>
                     </td>
                     <td>
-                        <button type="button" class="btn btn-danger btn-sm" onclick="deleteItem({{ order.id }}, {{ item.id }}, this)"></button>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="deleteItem({{ order.id }}, {{ item.id }}, this)">Delete</button>
                     </td>
                 </tr>
                 {% endfor %}
@@ -248,7 +248,7 @@ function addItemRow() {
             </select>
         </td>
         <td>
-            <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">ðŸ—‘ï¸</button>
+            <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">Delete</button>
         </td>
     `;
     
