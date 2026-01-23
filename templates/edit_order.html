@@ -3,7 +3,7 @@
 {% block title %}Edit Order - VAPA Order System{% endblock %}
 
 {% block content %}
-<h2>Edit Order</h2>
+<h2>&#9998; Edit Order</h2>
 
 <form method="POST" action="{{ url_for('edit_order', order_id=order.id) }}" class="form-container" id="orderForm">
     <div class="form-group">
@@ -46,7 +46,7 @@
                         </select>
                     </td>
                     <td>
-                        <button type="button" class="btn btn-danger btn-sm" onclick="deleteItem({{ order.id }}, {{ item.id }}, this)">Delete</button>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="deleteItem({{ order.id }}, {{ item.id }}, this)">&#128465;</button>
                     </td>
                 </tr>
                 {% endfor %}
@@ -86,8 +86,7 @@
 </div>
 
 <style>
-/* Responsive order items table */
-/* Make the form container full width */
+/* Make containers full width */
 .form-container {
     max-width: 100% !important;
     width: 100%;
@@ -100,13 +99,13 @@
     padding: 0 2rem;
 }
 
-/* Override any base container constraints */
 .main-content {
     max-width: 100% !important;
     width: 100%;
 }
-    
-    .order-items-container {
+
+/* Responsive order items table */
+.order-items-container {
     width: 100%;
     overflow-x: auto;
     margin: 1.5rem 0;
@@ -123,7 +122,7 @@
 }
 
 .order-items-table thead {
-    background-color: #004500;
+    background-color: #4472C4;
     color: white;
     position: sticky;
     top: 0;
@@ -248,7 +247,7 @@ function addItemRow() {
             </select>
         </td>
         <td>
-            <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">Delete</button>
+            <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">&#128465;</button>
         </td>
     `;
     
@@ -296,6 +295,7 @@ function deleteItem(orderId, itemId, button) {
         console.error(error);
     });
 }
+
 function updateTotals() {
     let subtotal = 0;
     
