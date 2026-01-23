@@ -378,7 +378,7 @@ def admin_all_orders():
 @app.route('/admin/teachers')
 @admin_required
 def admin_teachers():
-    teachers = User.query.filter_by(is_admin=False).all()
+    teachers = User.query.all()  # Show ALL users, including admins
     return render_template('admin_teachers.html', teachers=teachers)
 
 @app.route('/admin/teachers/add', methods=['GET', 'POST'])
