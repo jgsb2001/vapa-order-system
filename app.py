@@ -409,29 +409,43 @@ def add_teacher():
     
     return render_template('add_teacher.html')
 
+# REPLACE the edit_teacher route in app.py with this updated version
+# (Find the route around line 225-245 and replace it)
+
 @app.route('/admin/teachers/<int:teacher_id>/edit', methods=['GET', 'POST'])
 @admin_required
 def edit_teacher(teacher_id):
     teacher = User.query.get_or_404(teacher_id)
     
-    if teacher.is_admin:
-        flash('Cannot edit admin users from this page.', 'warning')
-        return redirect(url_for('admin_teachers'))
+    if teacher.is_admin and teacher.id == session['user_id']:
+        # Special handling: user is editing themselves as admin
+        # Allow everything except changing their own admin status
+        pass
     
     if request.method == 'POST':
         teacher.username = request.form.get('username')
         teacher.full_name = request.form.get('full_name')
         teacher.is_active = request.form.get('is_active') == 'on'
         
+        # Only update admin status if not editing yourself
+        if teacher.id != session['user_id']:
+            teacher.is_admin = request.form.get('is_admin') == 'on'
+        
         new_password = request.form.get('password')
         if new_password:
             teacher.set_password(new_password)
         
         db.session.commit()
-        flash(f'Teacher {teacher.full_name} updated successfully!', 'success')
+        
+        if teacher.is_admin:
+            flash(f'{teacher.full_name} updated successfully! They now have admin access.', 'success')
+        else:
+            flash(f'Teacher {teacher.full_name} updated successfully!', 'success')
+        
         return redirect(url_for('admin_teachers'))
     
     return render_template('edit_teacher.html', teacher=teacher)
+
 
 @app.route('/admin/teachers/<int:teacher_id>/delete', methods=['POST'])
 @admin_required
