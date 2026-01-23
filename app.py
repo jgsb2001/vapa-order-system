@@ -462,21 +462,19 @@ def delete_teacher(teacher_id):
     flash(f'Teacher {teacher.full_name} deleted successfully.', 'success')
     return redirect(url_for('admin_teachers'))
 
-@app.route('/orders/new', methods=['GET', 'POST'])
-@login_required
+@app.route('/order/new', methods=['GET', 'POST'])
+@login_required  # Should be @login_required, NOT @teacher_required
 def new_order():
     if request.method == 'POST':
+        user = User.query.get(session['user_id'])
         vendor = request.form.get('vendor')
         
-        new_order = Order(
-            user_id=session['user_id'],
-            vendor=vendor
-        )
-        db.session.add(new_order)
+        order = Order(vendor=vendor, user_id=user.id)
+        db.session.add(order)
         db.session.commit()
         
-        flash(f'New order form created for {vendor}!', 'success')
-        return redirect(url_for('edit_order', order_id=new_order.id))
+        flash('Order created successfully!', 'success')
+        return redirect(url_for('edit_order', order_id=order.id))
     
     return render_template('new_order.html')
 
