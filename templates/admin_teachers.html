@@ -30,16 +30,16 @@
                 <td>{{ teacher.username }}</td>
                 <td>
                     {% if teacher.is_admin %}
-                    <span class="badge badge-admin">ðŸ‘‘ Admin</span>
+                    <span class="badge badge-admin">&#128081; Admin</span>
                     {% else %}
                     <span class="badge badge-teacher">Teacher</span>
                     {% endif %}
                 </td>
                 <td>
                     {% if teacher.is_active %}
-                    <span class="status-active">â— Active</span>
+                    <span class="status-active">Active</span>
                     {% else %}
-                    <span class="status-inactive">â— Inactive</span>
+                    <span class="status-inactive">Inactive</span>
                     {% endif %}
                 </td>
                 <td class="text-center">{{ teacher.orders|length }}</td>
@@ -54,9 +54,9 @@
                 </td>
                 <td class="text-center">
                     <div class="action-buttons">
-                        <a href="{{ url_for('edit_teacher', teacher_id=teacher.id) }}" class="btn btn-primary btn-sm">âœï¸ Edit</a>
+                        <a href="{{ url_for('edit_teacher', teacher_id=teacher.id) }}" class="btn btn-primary btn-sm">Edit</a>
                         <form method="POST" action="{{ url_for('delete_teacher', teacher_id=teacher.id) }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete {{ teacher.full_name }}? All their orders will be deleted too.');">
-                            <button type="submit" class="btn btn-danger btn-sm">ðŸ—‘ï¸ Delete</button>
+                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                         </form>
                     </div>
                 </td>
