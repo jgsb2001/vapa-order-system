@@ -615,7 +615,7 @@ def export_excel():
         row += 1
     
     # Create sheet for each teacher
-    teachers = User.query.filter_by(is_admin=False).all()
+    teachers = User.query.all()
     for teacher in teachers:
         sheet = wb.create_sheet(teacher.full_name)
         
