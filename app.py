@@ -38,8 +38,18 @@ class Order(db.Model):
     vendor = db.Column(db.String(100), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    shipping = db.Column(db.Float, default=0)
+    tax = db.Column(db.Float, default=0)
     items = db.relationship('OrderItem', backref='order', lazy=True, cascade='all, delete-orphan')
 
+    @property
+    def subtotal(self):
+        return sum(item.total_cost for item in self.items)
+
+    @property
+    def grand_total(self):
+        return self.subtotal + (self.shipping or 0) + (self.tax or 0)
+    
 class OrderItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     order_id = db.Column(db.Integer, db.ForeignKey('order.id'), nullable=False)
@@ -517,7 +527,8 @@ def edit_order(order_id):
     
     if request.method == 'POST':
         order.vendor = request.form.get('vendor')
-        
+        order.shipping = float(request.form.get('shipping') or 0)
+        order.tax = float(request.form.get('tax') or 0)
         # Update or create items
         items_data = request.form.getlist('item_id')
         
