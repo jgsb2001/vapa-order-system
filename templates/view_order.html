@@ -45,13 +45,32 @@
             </tr>
             {% endfor %}
         </tbody>
-        <tfoot>
-            <tr>
-                <td colspan="4" class="text-right"><strong>Order Total:</strong></td>
-                <td class="text-right"><strong>${{ "{:.2f}".format(order.items|sum(attribute='total_cost')) }}</strong></td>
-                <td></td>
-            </tr>
-        </tfoot>
+       <tfoot>
+    <tr>
+        <td colspan="4" class="text-right"><strong>Subtotal:</strong></td>
+        <td class="text-right"><strong>${{ "{:.2f}".format(order.items|sum(attribute='total_cost')) }}</strong></td>
+        <td></td>
+    </tr>
+    {% if order.shipping %}
+    <tr>
+        <td colspan="4" class="text-right"><strong>Shipping:</strong></td>
+        <td class="text-right"><strong>${{ "{:.2f}".format(order.shipping) }}</strong></td>
+        <td></td>
+    </tr>
+    {% endif %}
+    {% if order.tax %}
+    <tr>
+        <td colspan="4" class="text-right"><strong>Tax:</strong></td>
+        <td class="text-right"><strong>${{ "{:.2f}".format(order.tax) }}</strong></td>
+        <td></td>
+    </tr>
+    {% endif %}
+    <tr>
+        <td colspan="4" class="text-right"><strong>Grand Total:</strong></td>
+        <td class="text-right"><strong>${{ "{:.2f}".format(order.grand_total) }}</strong></td>
+        <td></td>
+    </tr>
+</tfoot>
     </table>
     {% else %}
     <div class="empty-state">
