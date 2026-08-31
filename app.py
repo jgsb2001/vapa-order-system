@@ -634,19 +634,6 @@ def export_excel():
         sheet['A1'].font = Font(bold=True, size=14)
         
         row = 3
-        for order in teacher.orders:
-            sheet[f'A{row}'] = f'Vendor: {order.vendor}'
-            sheet[f'A{row}'].font = Font(bold=True)
-            row += 1
-            
-            headers = ['Catalog #', 'Description', 'Quantity', 'Unit Cost', 'Total Cost', 'Category']
-            for col, header in enumerate(headers, 1):
-                cell = sheet.cell(row=row, column=col)
-                cell.value = header
-                cell.fill = header_fill
-                cell.font = header_font
-            
-            row += 1
             
         for order in teacher.orders:
             sheet[f'A{row}'] = f'Vendor: {order.vendor}'
