@@ -648,48 +648,62 @@ def export_excel():
             
             row += 1
             
+        for order in teacher.orders:
+            sheet[f'A{row}'] = f'Vendor: {order.vendor}'
+            sheet[f'A{row}'].font = Font(bold=True)
+            row += 1
+
+            headers = ['Catalog #', 'Description', 'Quantity', 'Unit Cost', 'Total Cost', 'Category']
+            for col, header in enumerate(headers, 1):
+                cell = sheet.cell(row=row, column=col)
+                cell.value = header
+                cell.fill = header_fill
+                cell.font = header_font
+
+            row += 1
+
             for item in order.items:
-    sheet.cell(row=row, column=1).value = item.catalog_number
-    sheet.cell(row=row, column=2).value = item.description
-    sheet.cell(row=row, column=3).value = item.quantity
-    sheet.cell(row=row, column=4).value = item.unit_cost
-    sheet.cell(row=row, column=4).number_format = '$#,##0.00'
-    sheet.cell(row=row, column=5).value = item.total_cost
-    sheet.cell(row=row, column=5).number_format = '$#,##0.00'
-    sheet.cell(row=row, column=6).value = item.category
-    row += 1
+                sheet.cell(row=row, column=1).value = item.catalog_number
+                sheet.cell(row=row, column=2).value = item.description
+                sheet.cell(row=row, column=3).value = item.quantity
+                sheet.cell(row=row, column=4).value = item.unit_cost
+                sheet.cell(row=row, column=4).number_format = '$#,##0.00'
+                sheet.cell(row=row, column=5).value = item.total_cost
+                sheet.cell(row=row, column=5).number_format = '$#,##0.00'
+                sheet.cell(row=row, column=6).value = item.category
+                row += 1
 
-# Subtotal row
-sheet.cell(row=row, column=4).value = 'Subtotal:'
-sheet.cell(row=row, column=4).font = Font(bold=True)
-sheet.cell(row=row, column=5).value = order.subtotal
-sheet.cell(row=row, column=5).number_format = '$#,##0.00'
-row += 1
+            # Subtotal row
+            sheet.cell(row=row, column=4).value = 'Subtotal:'
+            sheet.cell(row=row, column=4).font = Font(bold=True)
+            sheet.cell(row=row, column=5).value = order.subtotal
+            sheet.cell(row=row, column=5).number_format = '$#,##0.00'
+            row += 1
 
-# Shipping row (only if shipping exists)
-if order.shipping:
-    sheet.cell(row=row, column=4).value = 'Shipping:'
-    sheet.cell(row=row, column=4).font = Font(bold=True)
-    sheet.cell(row=row, column=5).value = order.shipping
-    sheet.cell(row=row, column=5).number_format = '$#,##0.00'
-    row += 1
+            # Shipping row (only if shipping exists)
+            if order.shipping:
+                sheet.cell(row=row, column=4).value = 'Shipping:'
+                sheet.cell(row=row, column=4).font = Font(bold=True)
+                sheet.cell(row=row, column=5).value = order.shipping
+                sheet.cell(row=row, column=5).number_format = '$#,##0.00'
+                row += 1
 
-# Tax row (only if tax exists)
-if order.tax:
-    sheet.cell(row=row, column=4).value = 'Tax:'
-    sheet.cell(row=row, column=4).font = Font(bold=True)
-    sheet.cell(row=row, column=5).value = order.tax
-    sheet.cell(row=row, column=5).number_format = '$#,##0.00'
-    row += 1
+            # Tax row (only if tax exists)
+            if order.tax:
+                sheet.cell(row=row, column=4).value = 'Tax:'
+                sheet.cell(row=row, column=4).font = Font(bold=True)
+                sheet.cell(row=row, column=5).value = order.tax
+                sheet.cell(row=row, column=5).number_format = '$#,##0.00'
+                row += 1
 
-# Grand total row
-sheet.cell(row=row, column=4).value = 'Grand Total:'
-sheet.cell(row=row, column=4).font = Font(bold=True)
-sheet.cell(row=row, column=5).value = order.grand_total
-sheet.cell(row=row, column=5).number_format = '$#,##0.00'
-sheet.cell(row=row, column=5).font = Font(bold=True)
+            # Grand total row
+            sheet.cell(row=row, column=4).value = 'Grand Total:'
+            sheet.cell(row=row, column=4).font = Font(bold=True)
+            sheet.cell(row=row, column=5).value = order.grand_total
+            sheet.cell(row=row, column=5).number_format = '$#,##0.00'
+            sheet.cell(row=row, column=5).font = Font(bold=True)
 
-row += 2
+            row += 2
     
     # Save to BytesIO
     output = io.BytesIO()
