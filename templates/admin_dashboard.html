@@ -68,6 +68,8 @@
                 <th class="text-right">Conferences</th>
                 <th class="text-right">Field Trips</th>
                 <th class="text-right">Total</th>
+                <th class="text-right">% of Budget</th>
+                <th class="text-right">Budget Allocation</th>
             </tr>
         </thead>
         <tbody>
@@ -81,6 +83,8 @@
                 <td class="text-right">${{ "{:,.2f}".format(data.categories['ConferenceTraining']) }}</td>
                 <td class="text-right">${{ "{:,.2f}".format(data.categories['FieldTrips']) }}</td>
                 <td class="text-right"><strong>${{ "{:,.2f}".format(data.total) }}</strong></td>
+                <td class="text-right">{{ "{:.1f}".format((data.total / total_budget * 100) if total_budget > 0 else 0) }}%</td>
+                <td class="text-right">${{ "{:,.2f}".format(per_teacher_budget) }}</td>
             </tr>
             {% endfor %}
         </tbody>
