@@ -184,7 +184,7 @@ def dashboard():
     
     if user.is_admin:
         # Admin dashboard
-        teachers = User.query.filter_by(is_admin=False).all()
+        teachers = User.query.all()
         all_orders = Order.query.all()
         
         # Calculate department totals
@@ -216,14 +216,16 @@ def dashboard():
         total_budget = get_current_budget()
         total_allocated = sum(category_totals.values())
         remaining = total_budget - total_allocated
-        
+        per_teacher_budget = total_budget / 5
+
         return render_template('admin_dashboard.html',
-                             teachers=teachers,
-                             category_totals=category_totals,
-                             teacher_totals=teacher_totals,
-                             total_budget=total_budget,
-                             total_allocated=total_allocated,
-                             remaining=remaining)
+                                teachers=teachers,
+                                category_totals=category_totals,
+                                teacher_totals=teacher_totals,
+                                total_budget=total_budget,
+                                total_allocated=total_allocated,
+                                remaining=remaining,
+                                per_teacher_budget=per_teacher_budget)
     else:
         # Teacher dashboard
         orders = Order.query.filter_by(user_id=user.id).all()
