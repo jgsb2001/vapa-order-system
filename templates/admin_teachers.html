@@ -44,13 +44,7 @@
                 </td>
                 <td class="text-center">{{ teacher.orders|length }}</td>
                 <td class="text-right">
-                    {%- set total = 0 -%}
-                    {%- for order in teacher.orders -%}
-                      {%- for item in order.items -%}
-                        {%- set total = total + item.total_cost -%}
-                      {%- endfor -%}
-                    {%- endfor -%}
-                    ${{ "{:,.2f}".format(total) }}
+                    ${{ "{:,.2f}".format(teacher.orders|sum(attribute='grand_total')) }}
                 </td>
                 <td class="text-center">
                     <div class="action-buttons">

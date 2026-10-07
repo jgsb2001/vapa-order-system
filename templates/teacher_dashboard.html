@@ -21,7 +21,7 @@
                 Items: {{ order.items|length }}
             </p>
             <p class="order-total">
-                Total: ${{ "{:,.2f}".format(order.items|sum(attribute='total_cost')) }}
+                Total: ${{ "{:,.2f}".format(order.grand_total) }}
             </p>
             <div class="button-group">
                 <a href="{{ url_for('view_order', order_id=order.id) }}" class="btn btn-secondary btn-sm">View</a>

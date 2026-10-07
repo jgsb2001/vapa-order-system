@@ -57,6 +57,7 @@
 
 <div class="section">
     <h3>👥 Teacher Spending Summary</h3>
+    <p><small>All amounts include tax and shipping.</small></p>
     <table class="data-table">
         <thead>
             <tr>
@@ -70,6 +71,7 @@
                 <th class="text-right">Total</th>
                 <th class="text-right">% of Budget</th>
                 <th class="text-right">Budget Allocation</th>
+                <th class="text-right">Remaining</th>
             </tr>
         </thead>
         <tbody>
@@ -85,6 +87,10 @@
                 <td class="text-right"><strong>${{ "{:,.2f}".format(data.total) }}</strong></td>
                 <td class="text-right">{{ "{:.1f}".format((data.total / total_budget * 100) if total_budget > 0 else 0) }}%</td>
                 <td class="text-right">${{ "{:,.2f}".format(per_teacher_budget) }}</td>
+                {% set left = per_teacher_budget - data.total %}
+                <td class="text-right" {% if left < 0 %}style="color:#c0392b;font-weight:bold;"{% endif %}>
+                    {% if left < 0 %}Over by ${{ "{:,.2f}".format(-left) }}{% else %}${{ "{:,.2f}".format(left) }}{% endif %}
+                </td>
             </tr>
             {% endfor %}
         </tbody>
