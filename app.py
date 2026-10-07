@@ -10,7 +10,21 @@ from openpyxl.styles import Font, PatternFill, Alignment
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-change-this-in-production'
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///vapa_orders.db')
+
+def _database_url():
+    """DATABASE_URL, normalized to the driver in requirements.txt (psycopg2).
+
+    'postgresql+psycopg://' asks for psycopg 3, which is not installed, and
+    'postgres://' is rejected by SQLAlchemy 2. Both are rewritten so the app
+    starts no matter which form the environment variable uses.
+    """
+    url = os.environ.get('DATABASE_URL', 'sqlite:///vapa_orders.db')
+    for prefix in ('postgresql+psycopg://', 'postgres://', 'postgresql://'):
+        if url.startswith(prefix):
+            return 'postgresql+psycopg2://' + url[len(prefix):]
+    return url
+
+app.config['SQLALCHEMY_DATABASE_URI'] = _database_url()
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
