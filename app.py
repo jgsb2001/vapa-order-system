@@ -78,6 +78,27 @@ class BudgetHistory(db.Model):
     created_by = db.Column(db.String(100))
     notes = db.Column(db.String(500))
 
+CATEGORIES = ['Books&Supplies', 'Consultants', 'Repairs', 'SoftwareLicensing', 'ConferenceTraining', 'FieldTrips']
+
+def order_category_totals(order):
+    """Per-category totals for one order INCLUDING its tax and shipping.
+
+    Tax and shipping are stored once per order, so they are spread across the
+    order's categories in proportion to each category's item cost. The values
+    add up to order.grand_total, which is the one definition of "total" used
+    by every page and by the Excel export.
+    """
+    totals = {}
+    for item in order.items:
+        if item.category in CATEGORIES:
+            totals[item.category] = totals.get(item.category, 0) + item.total_cost
+    base = sum(totals.values())
+    extras = order.grand_total - base
+    if base > 0 and extras:
+        for cat in totals:
+            totals[cat] += extras * (totals[cat] / base)
+    return totals
+
 # Helper function to get current budget
 def get_current_budget():
     setting = Settings.query.filter_by(key='total_budget').first()
@@ -188,14 +209,7 @@ def dashboard():
         all_orders = Order.query.all()
         
         # Calculate department totals
-        category_totals = {
-            'Books&Supplies': 0,
-            'Consultants': 0,
-            'Repairs': 0,
-            'SoftwareLicensing': 0,
-            'ConferenceTraining': 0,
-            'FieldTrips': 0
-        }
+        category_totals = {cat: 0 for cat in CATEGORIES}
         
         teacher_totals = {}
         
@@ -207,14 +221,14 @@ def dashboard():
                     'categories': {cat: 0 for cat in category_totals.keys()}
                 }
             
-            for item in order.items:
-                if item.category in category_totals:
-                    category_totals[item.category] += item.total_cost
-                    teacher_totals[teacher_name]['categories'][item.category] += item.total_cost
-                    teacher_totals[teacher_name]['total'] += item.total_cost
+            # Totals include tax and shipping (order.grand_total)
+            for cat, amount in order_category_totals(order).items():
+                category_totals[cat] += amount
+                teacher_totals[teacher_name]['categories'][cat] += amount
+            teacher_totals[teacher_name]['total'] += order.grand_total
         
         total_budget = get_current_budget()
-        total_allocated = sum(category_totals.values())
+        total_allocated = sum(order.grand_total for order in all_orders)
         remaining = total_budget - total_allocated
         per_teacher_budget = total_budget / 5
 
@@ -231,19 +245,11 @@ def dashboard():
         orders = Order.query.filter_by(user_id=user.id).all()
         
         # Calculate teacher's totals
-        category_totals = {
-            'Books&Supplies': 0,
-            'Consultants': 0,
-            'Repairs': 0,
-            'SoftwareLicensing': 0,
-            'ConferenceTraining': 0,
-            'FieldTrips': 0
-        }
+        category_totals = {cat: 0 for cat in CATEGORIES}
         
         for order in orders:
-            for item in order.items:
-                if item.category in category_totals:
-                    category_totals[item.category] += item.total_cost
+            for cat, amount in order_category_totals(order).items():
+                category_totals[cat] += amount
         
         return render_template('teacher_dashboard.html',
                              orders=orders,
@@ -329,12 +335,9 @@ def admin_all_orders():
     # Apply category filter and calculate totals
     filtered_orders = []
     for order in all_orders:
-        order_total = sum(item.total_cost for item in order.items)
-        order_categories = {}
-        
-        for item in order.items:
-            if item.category:
-                order_categories[item.category] = order_categories.get(item.category, 0) + item.total_cost
+        # Total includes tax and shipping
+        order_total = order.grand_total
+        order_categories = order_category_totals(order)
         
         # If category filter is set, only include orders with that category
         if category_filter:
@@ -501,18 +504,8 @@ def view_order(order_id):
         flash('Access denied.', 'danger')
         return redirect(url_for('dashboard'))
     
-    category_totals = {
-        'Books&Supplies': 0,
-        'Consultants': 0,
-        'Repairs': 0,
-        'SoftwareLicensing': 0,
-        'ConferenceTraining': 0,
-        'FieldTrips': 0
-    }
-    
-    for item in order.items:
-        if item.category in category_totals:
-            category_totals[item.category] += item.total_cost
+    category_totals = {cat: 0 for cat in CATEGORIES}
+    category_totals.update(order_category_totals(order))
     
     return render_template('view_order.html', order=order, category_totals=category_totals)
 
@@ -605,7 +598,7 @@ def export_excel():
     summary['A1'].font = Font(bold=True, size=14)
     
     summary['A3'] = 'Category'
-    summary['B3'] = 'Total'
+    summary['B3'] = 'Total (incl. tax & shipping)'
     summary['A3'].fill = header_fill
     summary['B3'].fill = header_fill
     summary['A3'].font = header_font
@@ -616,16 +609,56 @@ def export_excel():
     
     all_orders = Order.query.all()
     for order in all_orders:
-        for item in order.items:
-            if item.category in category_totals:
-                category_totals[item.category] += item.total_cost
+        for cat, amount in order_category_totals(order).items():
+            category_totals[cat] += amount
     
     row = 4
     for cat in categories:
         summary[f'A{row}'] = cat
-        summary[f'B{row}'] = category_totals[cat]
+        summary[f'B{row}'] = round(category_totals[cat], 2)
         summary[f'B{row}'].number_format = '$#,##0.00'
         row += 1
+
+    money = '$#,##0.00'
+    total_budget = get_current_budget()
+    total_spent = round(sum(order.grand_total for order in all_orders), 2)
+    for label, value in [('TOTAL', total_spent),
+                         ('Department Budget', total_budget),
+                         ('Remaining', round(total_budget - total_spent, 2))]:
+        summary[f'A{row}'] = label
+        summary[f'B{row}'] = value
+        summary[f'A{row}'].font = Font(bold=True)
+        summary[f'B{row}'].font = Font(bold=True)
+        summary[f'B{row}'].number_format = money
+        row += 1
+
+    # Per-teacher totals on the same basis as the teacher sheets' Grand Totals
+    row += 1
+    per_teacher_budget = total_budget / 5
+    for col, header in enumerate(['Teacher', 'Subtotal', 'Shipping', 'Tax', 'Total', 'Allocation', 'Remaining'], 1):
+        cell = summary.cell(row=row, column=col)
+        cell.value = header
+        cell.fill = header_fill
+        cell.font = header_font
+    row += 1
+    for teacher in User.query.all():
+        if not teacher.orders:
+            continue
+        t_sub = sum(o.subtotal for o in teacher.orders)
+        t_ship = sum((o.shipping or 0) for o in teacher.orders)
+        t_tax = sum((o.tax or 0) for o in teacher.orders)
+        t_total = sum(o.grand_total for o in teacher.orders)
+        values = [teacher.full_name, t_sub, t_ship, t_tax, t_total,
+                  per_teacher_budget, per_teacher_budget - t_total]
+        for col, value in enumerate(values, 1):
+            cell = summary.cell(row=row, column=col)
+            cell.value = round(value, 2) if col > 1 else value
+            if col > 1:
+                cell.number_format = money
+        row += 1
+    summary.column_dimensions['A'].width = 24
+    for letter in 'BCDEFG':
+        summary.column_dimensions[letter].width = 16
     
     # Create sheet for each teacher
     teachers = User.query.all()
